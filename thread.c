@@ -1,6 +1,4 @@
-// hilo.c
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 typedef void (*ThreadFunc)(void *);
