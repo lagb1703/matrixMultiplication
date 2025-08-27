@@ -2,12 +2,21 @@
 #include "malloc.h"
 #include <stdlib.h>
 #include "time.h"
+#include "thread.c"
 #include <stdio.h>
 #define I32 int32_t
 #define UI32 uint32_t
 #define MATRIX I32 **
 #define ARGSNUM 2
 #define MAXNUM 10
+
+typedef struct
+{
+    MATRIX a;
+    MATRIX b;
+    MATRIX c;
+    UI32 i, n;
+} Data;
 
 void freeMatrix(MATRIX a, I32 n)
 {
@@ -18,8 +27,27 @@ void freeMatrix(MATRIX a, I32 n)
     free(a);
 }
 
-void print(MATRIX a, I32 n)
+void print(MATRIX a, UI32 n)
 {
+    printf("{");
+    for (UI32 i = 0; i < n; i++)
+    {
+        printf("{");
+        for (UI32 j = 0; j < n; j++)
+        {
+            printf("%i", a[i][j]);
+            if (j < n - 1)
+            {
+                printf(",");
+            }
+        }
+        printf("}");
+        if (i < n - 1)
+        {
+            printf(",");
+        }
+    }
+    printf("}\n");
     for (UI32 i = 0; i < n; i++)
     {
         for (UI32 j = 0; j < n; j++)
@@ -30,24 +58,51 @@ void print(MATRIX a, I32 n)
     }
 }
 
+void inter(void *d)
+{
+    Data *data = (Data *)d;
+    UI32 n = data->n;
+    UI32 i = data->i;
+    MATRIX result = data->c;
+    MATRIX a = data->a;
+    MATRIX b = data->b;
+    for (I32 j = 0; j < n; j++)
+    {
+        result[i][j] = 0;
+        for (I32 k = 0; k < n; k++)
+        {
+            result[i][j] += a[i][k] * b[k][j];
+        }
+    }
+    killMyThread(NULL);
+}
+
 MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n)
 {
     MATRIX result = (MATRIX)malloc(sizeof(I32 *) * n);
+    Data *data = (Data *)malloc(sizeof(Data) * 2);
+    data[0].a = a;
+    data[0].b = b;
+    data[0].c = result;
+    data[0].n = n;
+    data[1].a = a;
+    data[1].b = b;
+    data[1].c = result;
+    data[1].n = n;
+    Thread thread[2];
     for (I32 i = 0; i < n; i++)
     {
-        result[i] = (I32 *)malloc(sizeof(I32) * n);
-        for (I32 j = 0; j < n; j++)
+        if (i % 2 == 0 && i != 0)
         {
-            I32 partial = 0;
-            for (I32 k = 0; k < n; k++)
-            {
-                partial += a[i][k] * b[k][j];
-                // printf("%i a%i,%i %i b%i, %i\n", a[i][k], i+1, k+1, b[k][j], k+1, j+1);
-            }
-            // printf("\n");
-            result[i][j] = partial;
+            joinThread(thread[0]);
+            joinThread(thread[1]);
         }
+        result[i] = (I32 *)malloc(sizeof(I32) * n);
+        data[i % 2].i = i;
+        createThread(inter, &data[i % 2], &thread[i % 2]);
     }
+    joinThread(thread[0]);
+    free(data);
     return result;
 }
 

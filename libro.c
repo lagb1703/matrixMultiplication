@@ -2,6 +2,7 @@
 #include "malloc.h"
 #include <stdlib.h>
 #include "time.h"
+#include "thread.c"
 #include <stdio.h>
 #define I32 int32_t
 #define UI32 uint32_t
@@ -9,7 +10,15 @@
 #define ARGSNUM 2
 #define MAXNUM 5
 
-void freeMatrix(MATRIX a, I32 n)
+typedef struct
+{
+    MATRIX a;
+    MATRIX b;
+    MATRIX c;
+    UI32 n;
+} Data;
+
+void freeMatrix(MATRIX a, UI32 n)
 {
     for (UI32 i = 0; i < n; i++)
     {
@@ -18,7 +27,7 @@ void freeMatrix(MATRIX a, I32 n)
     free(a);
 }
 
-void print(MATRIX a, I32 n)
+void print(MATRIX a, UI32 n)
 {
     printf("{");
     for (UI32 i = 0; i < n; i++)
@@ -49,11 +58,55 @@ void print(MATRIX a, I32 n)
     }
 }
 
+void rigthVector(void *d)
+{
+    Data *data = (Data *)d;
+    UI32 n = data->n;
+    MATRIX a = data->a;
+    MATRIX b = data->b;
+    MATRIX c = data->c;
+    for (UI32 i = 0; i < n; i++)
+    {
+        for (UI32 j = 0; j < n; j++)
+        {
+            c[i][n] += a[i][j] * b[j][n];
+        }
+        c[i][n] += a[i][n] * b[n][n];
+    }
+    killMyThread(NULL);
+}
+
+void leftVector(void *d)
+{
+    Data *data = (Data *)d;
+    UI32 n = data->n;
+    MATRIX a = data->a;
+    MATRIX b = data->b;
+    MATRIX c = data->c;
+    for (UI32 i = 0; i < n; i++)
+    {
+        for (UI32 j = 0; j < n; j++)
+        {
+            c[n][i] += a[n][j] * b[j][i];
+        }
+        c[n][i] += a[n][n] * b[n][i];
+    }
+    killMyThread(NULL);
+}
+
 void multCuadratica(MATRIX a, MATRIX b, MATRIX c, UI32 n)
 {
     n--;
+    Thread threads[2];
     for (; n > 1; n--)
     {
+        Data *d = (Data *)malloc(sizeof(Data));
+        d->a = a;
+        d->b = b;
+        d->c = c;
+        d->n = n;
+        createThread(rigthVector, d, &threads[0]);
+        createThread(leftVector, d, &threads[1]);
         for (UI32 i = 0; i <= n; i++)
         {
             c[n][n] += a[n][i] * b[i][n];
@@ -62,25 +115,12 @@ void multCuadratica(MATRIX a, MATRIX b, MATRIX c, UI32 n)
         {
             for (UI32 j = 0; j < n; j++)
             {
-                c[i][n] += a[i][j] * b[j][n];
-            }
-            c[i][n] += a[i][n] * b[n][n];
-        }
-        for (UI32 i = 0; i < n; i++)
-        {
-            for (UI32 j = 0; j < n; j++)
-            {
-                c[n][i] += a[n][j] * b[j][i];
-            }
-            c[n][i] += a[n][n] * b[n][i];
-        }
-        for (UI32 i = 0; i < n; i++)
-        {
-            for (UI32 j = 0; j < n; j++)
-            {
                 c[i][j] += a[i][n] * b[n][j];
             }
         }
+        joinThread(threads[0]);
+        joinThread(threads[1]);
+        free(d);
     }
     c[0][0] += a[0][0] * b[0][0] + a[0][1] * b[1][0];
     c[0][1] += a[0][0] * b[0][1] + a[0][1] * b[1][1];
