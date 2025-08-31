@@ -80,28 +80,32 @@ void inter(void *d)
 MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n)
 {
     MATRIX result = (MATRIX)malloc(sizeof(I32 *) * n);
-    Data *data = (Data *)malloc(sizeof(Data) * 2);
-    data[0].a = a;
-    data[0].b = b;
-    data[0].c = result;
-    data[0].n = n;
-    data[1].a = a;
-    data[1].b = b;
-    data[1].c = result;
-    data[1].n = n;
-    Thread thread[2];
+    Data *data = (Data *)malloc(sizeof(Data) * 4);
+    for (UI32 i = 0; i < 4; i++)
+    {
+        data[i].a = a;
+        data[i].b = b;
+        data[i].c = result;
+        data[i].n = n;
+    }
+    Thread thread[4];
     for (I32 i = 0; i < n; i++)
     {
-        if (i % 2 == 0 && i != 0)
+        if (i % 4 == 0 && i != 0)
         {
-            joinThread(thread[0]);
-            joinThread(thread[1]);
+            for (UI32 j = 0; j < 4; j++)
+            {
+                joinThread(&thread[j]);
+            }
         }
         result[i] = (I32 *)malloc(sizeof(I32) * n);
-        data[i % 2].i = i;
-        createThread(inter, &data[i % 2], &thread[i % 2]);
+        data[i % 4].i = i;
+        createThread(inter, &data[i % 4], &thread[i % 4]);
     }
-    joinThread(thread[0]);
+    for (UI32 j = 0; j < min(n, 4); j++)
+    {
+        joinThread(&thread[j]);
+    }
     free(data);
     return result;
 }
