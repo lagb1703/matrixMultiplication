@@ -9,6 +9,7 @@
 #define MATRIX I32 **
 #define ARGSNUM 2
 #define MAXNUM 5
+#define NumThreads 2
 
 typedef struct
 {
@@ -94,33 +95,55 @@ void leftVector(void *d)
     killMyThread(NULL);
 }
 
+void scalar(void *d)
+{
+    Data *data = (Data *)d;
+    UI32 n = data->n;
+    MATRIX a = data->a;
+    MATRIX b = data->b;
+    MATRIX c = data->c;
+    for (UI32 i = 0; i <= n; i++)
+    {
+        c[n][n] += a[n][i] * b[i][n];
+    }
+    killMyThread(NULL);
+}
+
+void centralMatrix(void *d)
+{
+    Data *data = (Data *)d;
+    UI32 n = data->n;
+    MATRIX a = data->a;
+    MATRIX b = data->b;
+    MATRIX c = data->c;
+    for (UI32 i = 0; i < n; i++)
+    {
+        for (UI32 j = 0; j < n; j++)
+        {
+            c[i][j] += a[i][n] * b[n][j];
+        }
+    }
+}
+
 void multCuadratica(MATRIX a, MATRIX b, MATRIX c, UI32 n)
 {
     n--;
-    Thread threads[2];
-    for (; n > 1; n--)
+    Thread threads[4];
+    Data *data = (Data *)malloc(sizeof(Data));
+    data->a = a;
+    data->b = b;
+    data->c = c;
+    for(; n > 1; n--)
     {
-        Data *d = (Data *)malloc(sizeof(Data));
-        d->a = a;
-        d->b = b;
-        d->c = c;
-        d->n = n;
-        createThread(rigthVector, d, &threads[0]);
-        createThread(leftVector, d, &threads[1]);
-        for (UI32 i = 0; i <= n; i++)
-        {
-            c[n][n] += a[n][i] * b[i][n];
-        }
+        data->n = n;
+        createThread(rigthVector, data, &threads[0]);
+        createThread(leftVector, data, &threads[1]);
+        createThread(scalar, data, &threads[2]);
+        createThread(centralMatrix, data, &threads[3]);
         for (UI32 i = 0; i < n; i++)
         {
-            for (UI32 j = 0; j < n; j++)
-            {
-                c[i][j] += a[i][n] * b[n][j];
-            }
+            joinThread(threads[i]);
         }
-        joinThread(threads[0]);
-        joinThread(threads[1]);
-        free(d);
     }
     c[0][0] += a[0][0] * b[0][0] + a[0][1] * b[1][0];
     c[0][1] += a[0][0] * b[0][1] + a[0][1] * b[1][1];
@@ -165,15 +188,15 @@ int main(int argc, char **argv)
     UI32 n = (UI32)atoi(argv[1]);
     srand(time(NULL));
     MATRIX a = randomMatrix(n);
-    // printf("matrix a\n");
-    // print(a, n);
+    printf("matrix a\n");
+    print(a, n);
     MATRIX b = randomMatrix(n);
-    // printf("matrix b\n");
-    // print(b, n);
+    printf("matrix b\n");
+    print(b, n);
     MATRIX c = init(n);
     multCuadratica(a, b, c, n);
-    // printf("matrix c\n");
-    // print(c, n);
+    printf("matrix c\n");
+    print(c, n);
     freeMatrix(a, n);
     freeMatrix(b, n);
     freeMatrix(c, n);
