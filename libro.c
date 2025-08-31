@@ -140,11 +140,12 @@ void multCuadratica(MATRIX a, MATRIX b, MATRIX c, UI32 n)
         createThread(leftVector, data, &threads[1]);
         createThread(scalar, data, &threads[2]);
         createThread(centralMatrix, data, &threads[3]);
-        for (UI32 i = 0; i < n; i++)
+        for (UI32 i = 0; i < 4; i++)
         {
             joinThread(threads[i]);
         }
     }
+    free(data);
     c[0][0] += a[0][0] * b[0][0] + a[0][1] * b[1][0];
     c[0][1] += a[0][0] * b[0][1] + a[0][1] * b[1][1];
     c[1][0] += a[1][0] * b[0][0] + a[1][1] * b[1][0];
