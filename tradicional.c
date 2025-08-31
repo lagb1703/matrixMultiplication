@@ -7,7 +7,7 @@
 #define I32 int32_t
 #define UI32 uint32_t
 #define MATRIX I32 **
-#define ARGSNUM 2
+#define ARGSNUM 3
 #define MAXNUM 10
 
 typedef struct
@@ -77,35 +77,38 @@ void inter(void *d)
     killMyThread(NULL);
 }
 
-MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n)
+MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 numTreads)
 {
     MATRIX result = (MATRIX)malloc(sizeof(I32 *) * n);
-    Data *data = (Data *)malloc(sizeof(Data) * 4);
-    for (UI32 i = 0; i < 4; i++)
+    Data *data = (Data *)malloc(sizeof(Data) * numTreads);
+    for (UI32 i = 0; i < numTreads; i++)
     {
         data[i].a = a;
         data[i].b = b;
         data[i].c = result;
         data[i].n = n;
     }
-    Thread thread[4];
+    Thread *thread = (Thread *)malloc(sizeof(Thread) * numTreads);
     for (I32 i = 0; i < n; i++)
     {
-        if (i % 4 == 0 && i != 0)
+        if (i % numTreads == 0 && i != 0)
         {
-            for (UI32 j = 0; j < 4; j++)
+            for (UI32 j = 0; j < numTreads; j++)
             {
+                printf("esperar %i\n", j);
                 joinThread(&thread[j]);
             }
         }
         result[i] = (I32 *)malloc(sizeof(I32) * n);
-        data[i % 4].i = i;
-        createThread(inter, &data[i % 4], &thread[i % 4]);
+        data[i % numTreads].i = i;
+        printf("crear hilo %i\n", i % numTreads);
+        createThread(inter, &data[i % numTreads], &thread[i % numTreads]);
     }
-    for (UI32 j = 0; j < min(n, 4); j++)
-    {
-        joinThread(&thread[j]);
-    }
+    // for (UI32 j = 0; j < (n % numTreads == 0 ? numTreads : n % numTreads); j++)
+    // {
+    //     printf("esperar %i\n", j);
+    //     joinThread(&thread[j]);
+    // }
     free(data);
     return result;
 }
@@ -131,16 +134,17 @@ int main(int argc, char **argv)
         return 1;
     }
     UI32 n = (UI32)atoi(argv[1]);
+    UI32 numTreads = (UI32)atoi(argv[2]);
     srand(time(NULL));
     MATRIX a = randomMatrix(n);
-    // printf("matrix a\n");
-    // print(a, n);
+    printf("matrix a\n");
+    print(a, n);
     MATRIX b = randomMatrix(n);
-    // printf("matrix b\n");
-    // print(b, n);
-    MATRIX c = multCuadratica(a, b, n);
-    // printf("matrix c\n");
-    // print(c, n);
+    printf("matrix b\n");
+    print(b, n);
+    MATRIX c = multCuadratica(a, b, n, numTreads);
+    printf("matrix c\n");
+    print(c, n);
     freeMatrix(a, n);
     freeMatrix(b, n);
     freeMatrix(c, n);
