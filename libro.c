@@ -51,43 +51,41 @@ void print(MATRIX a, I32 n)
 
 void multCuadratica(MATRIX a, MATRIX b, MATRIX c, UI32 n)
 {
-    if (n <= 2)
-    {
-        c[0][0] += a[0][0] * b[0][0] + a[0][1] * b[1][0];
-        c[0][1] += a[0][0] * b[0][1] + a[0][1] * b[1][1];
-        c[1][0] += a[1][0] * b[0][0] + a[1][1] * b[1][0];
-        c[1][1] += a[1][0] * b[0][1] + a[1][1] * b[1][1];
-        return;
-    }
     n -= 1;
-    for (UI32 i = 0; i <= n; i++)
+    for (; n > 1; n--)
     {
-        c[n][n] += a[n][i] * b[i][n];
-    }
-    for (UI32 i = 0; i < n; i++)
-    {
-        for (UI32 j = 0; j < n; j++)
+        for (UI32 i = 0; i <= n; i++)
         {
-            c[i][n] += a[i][j] * b[j][n];
+            c[n][n] += a[n][i] * b[i][n];
         }
-        c[i][n] += a[i][n] * b[n][n];
-    }
-    for (UI32 i = 0; i < n; i++)
-    {
-        for (UI32 j = 0; j < n; j++)
+        for (UI32 i = 0; i < n; i++)
         {
-            c[n][i] += a[n][j] * b[j][i];
+            for (UI32 j = 0; j < n; j++)
+            {
+                c[i][n] += a[i][j] * b[j][n];
+            }
+            c[i][n] += a[i][n] * b[n][n];
         }
-        c[n][i] += a[n][n] * b[n][i];
-    }
-    for (UI32 i = 0; i < n; i++)
-    {
-        for (UI32 j = 0; j < n; j++)
+        for (UI32 i = 0; i < n; i++)
         {
-            c[i][j] += a[i][n] * b[n][j];
+            for (UI32 j = 0; j < n; j++)
+            {
+                c[n][i] += a[n][j] * b[j][i];
+            }
+            c[n][i] += a[n][n] * b[n][i];
+        }
+        for (UI32 i = 0; i < n; i++)
+        {
+            for (UI32 j = 0; j < n; j++)
+            {
+                c[i][j] += a[i][n] * b[n][j];
+            }
         }
     }
-    multCuadratica(a, b, c, n);
+    c[0][0] += a[0][0] * b[0][0] + a[0][1] * b[1][0];
+    c[0][1] += a[0][0] * b[0][1] + a[0][1] * b[1][1];
+    c[1][0] += a[1][0] * b[0][0] + a[1][1] * b[1][0];
+    c[1][1] += a[1][0] * b[0][1] + a[1][1] * b[1][1];
 }
 
 MATRIX randomMatrix(UI32 n)
@@ -127,15 +125,15 @@ int main(int argc, char **argv)
     UI32 n = (UI32)atoi(argv[1]);
     srand(time(NULL));
     MATRIX a = randomMatrix(n);
-    // printf("matrix a\n");
-    // print(a, n);
+    printf("matrix a\n");
+    print(a, n);
     MATRIX b = randomMatrix(n);
-    // printf("matrix b\n");
-    // print(b, n);
+    printf("matrix b\n");
+    print(b, n);
     MATRIX c = init(n);
     multCuadratica(a, b, c, n);
-    // printf("matrix c\n");
-    // print(c, n);
+    printf("matrix c\n");
+    print(c, n);
     freeMatrix(a, n);
     freeMatrix(b, n);
     freeMatrix(c, n);
