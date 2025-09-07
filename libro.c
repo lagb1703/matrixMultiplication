@@ -47,7 +47,7 @@ void print(MATRIX a, UI32 n)
             printf(",");
         }
     }
-    printf("}\n");
+    printf("}*");
     for (UI32 i = 0; i < n; i++)
     {
         for (UI32 j = 0; j < n; j++)
@@ -65,6 +65,7 @@ void rigthVector(void *d)
     MATRIX a = data->a;
     MATRIX b = data->b;
     MATRIX c = data->c;
+    // printf("\niniciando vector derecha %i\n", n);
     for (UI32 i = 0; i < n; i++)
     {
         for (UI32 j = 0; j < n; j++)
@@ -73,6 +74,7 @@ void rigthVector(void *d)
         }
         c[i][n] += a[i][n] * b[n][n];
     }
+    // printf("finalizando vector derecha %i\n", n);
     killMyThread(NULL);
 }
 
@@ -83,6 +85,7 @@ void leftVector(void *d)
     MATRIX a = data->a;
     MATRIX b = data->b;
     MATRIX c = data->c;
+    // printf("iniciando vector izquierdo %i\n", n);
     for (UI32 i = 0; i < n; i++)
     {
         for (UI32 j = 0; j < n; j++)
@@ -91,6 +94,7 @@ void leftVector(void *d)
         }
         c[n][i] += a[n][n] * b[n][i];
     }
+    // printf("finalizando vector izquierdo %i\n", n);
     killMyThread(NULL);
 }
 
@@ -101,10 +105,12 @@ void scalar(void *d)
     MATRIX a = data->a;
     MATRIX b = data->b;
     MATRIX c = data->c;
+    // printf("iniciando escalar %i\n", n);
     for (UI32 i = 0; i <= n; i++)
     {
         c[n][n] += a[n][i] * b[i][n];
     }
+    // printf("finalizando escalar %i\n", n);
     killMyThread(NULL);
 }
 
@@ -115,6 +121,7 @@ void centralMatrix(void *d)
     MATRIX a = data->a;
     MATRIX b = data->b;
     MATRIX c = data->c;
+    // printf("iniciando matrix central %i\n", n);
     for (UI32 i = 0; i < n; i++)
     {
         for (UI32 j = 0; j < n; j++)
@@ -122,39 +129,47 @@ void centralMatrix(void *d)
             c[i][j] += a[i][n] * b[n][j];
         }
     }
+    // printf("finalizando matrix central %i\n", n);
 }
 
 void multCuadratica(MATRIX a, MATRIX b, MATRIX c, UI32 n, UI32 numThreads)
 {
     Thread *threads = (Thread *)malloc(sizeof(Thread) * numThreads);
-    Data *data = (Data *)malloc(sizeof(Data));
-    data->a = a;
-    data->b = b;
-    data->c = c;
-    for (UI32 i = n - 1; i > 1; i--)
+    UI32 oct = numThreads / 4;
+    Data *data = (Data *)malloc(sizeof(Data) * oct);
+    for (UI32 i = 0; i < oct; i++)
     {
-        if ((4 * (n - i)) % numThreads == 0 && i != 0)
+        data[i].a = a;
+        data[i].b = b;
+        data[i].c = c;
+    }
+    for (I32 i = n - 1; i >= 0; i--)
+    {
+        UI32 index = (n - i - 1);
+        data[index % oct].n = i;
+        createThread(rigthVector, &data[index % oct], &threads[(4 * index) % numThreads]);
+        createThread(scalar, &data[index % oct], &threads[(4 * index + 2) % numThreads]);
+        createThread(centralMatrix, &data[index % oct], &threads[(4 * index + 3) % numThreads]);
+        createThread(leftVector, &data[index % oct], &threads[(4 * index + 1) % numThreads]);
+        if ((4 * (index + 1)) % numThreads == 0)
         {
+            // printf("esperando\n");
             for (UI32 j = 0; j < numThreads; j++)
             {
                 joinThread(threads[j]);
             }
         }
-        data->n = i;
-        createThread(rigthVector, data, &threads[(4 * i) % numThreads]);
-        createThread(leftVector, data, &threads[(4 * i + 1) % numThreads]);
-        createThread(scalar, data, &threads[(4 * i + 2) % numThreads]);
-        createThread(centralMatrix, data, &threads[(4 * i + 3) % numThreads]);
     }
-    for (UI32 j = 0; j < numThreads; j++)
-    {
-        joinThread(threads[j]);
-    }
+    // for (UI32 j = 0; j < numThreads; j++)
+    // {
+    //     if (threads[j])
+    //         joinThread(threads[j]);
+    // }
     free(data);
-    c[0][0] += a[0][0] * b[0][0] + a[0][1] * b[1][0];
-    c[0][1] += a[0][0] * b[0][1] + a[0][1] * b[1][1];
-    c[1][0] += a[1][0] * b[0][0] + a[1][1] * b[1][0];
-    c[1][1] += a[1][0] * b[0][1] + a[1][1] * b[1][1];
+    // c[0][0] += a[0][0] * b[0][0] + a[0][1] * b[1][0];
+    // c[0][1] += a[0][0] * b[0][1] + a[0][1] * b[1][1];
+    // c[1][0] += a[1][0] * b[0][0] + a[1][1] * b[1][0];
+    // c[1][1] += a[1][0] * b[0][1] + a[1][1] * b[1][1];
 }
 
 MATRIX randomMatrix(UI32 n)
@@ -202,7 +217,7 @@ int main(int argc, char **argv)
     // print(b, n);
     MATRIX c = init(n);
     multCuadratica(a, b, c, n, numThreads);
-    // printf("matrix c\n");
+    // printf("\nmatrix c\n");
     // print(c, n);
     freeMatrix(a, n);
     freeMatrix(b, n);
