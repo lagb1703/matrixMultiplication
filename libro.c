@@ -10,8 +10,10 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #define SHM_NAME "/arrays"
-#define SEM_NAME "/semC1"
+#define SEM_NAME "/semC"
+#define SEM_PROCESS "/process"
 #define I32 int32_t
 #define UI32 uint32_t
 #define MATRIX I32 **
@@ -21,7 +23,7 @@
 typedef struct
 {
     size_t a_off, b_off, c_off, div_off, total_size;
-    UI32 n, nProcess, processCount;
+    UI32 n, processCount;
 } Data;
 
 size_t round_up(size_t x, size_t a) { return (x + a - 1) & ~(a - 1); }
@@ -33,7 +35,13 @@ typedef struct
 
 range *getWorkingRange(Data *d)
 {
-    sem_t *semC = sem_open(SEM_NAME, O_CREAT, 1);
+    sem_t *semC = sem_open(SEM_NAME, 0);
+    if (semC == SEM_FAILED)
+    {
+        perror("Error abriendo semáforo en getWorkingRange");
+        return NULL;
+    }
+
     sem_wait(semC);
     UI32 *init = (I32 *)((char *)d + d->div_off);
     d->processCount--;
@@ -43,11 +51,13 @@ range *getWorkingRange(Data *d)
     {
         r->end = d->n;
         sem_post(semC);
+        sem_close(semC);
         return r;
     }
     r->end = *init + *(init + 1);
     *init = r->end;
     sem_post(semC);
+    sem_close(semC);
     return r;
 }
 
@@ -88,19 +98,19 @@ void multCuadratica(Data *data, pid_t p)
     I32 *b = (I32 *)((char *)data + data->b_off);
     I32 *c = (I32 *)((char *)data + data->c_off);
     UI32 n = data->n, start = 0, end = 0;
-    sem_t *semC = sem_open(SEM_NAME, O_CREAT, 1);
-    if (p == 0)
-    {
-        range *r = getWorkingRange(data);
-        start = r->start;
-        end = r->end;
-        free(r);
-    }
-    else
-    {
-        start = 1;
-        end = 2;
-    }
+    range *r = getWorkingRange(data);
+    start = r->start;
+    end = r->end;
+    printf("start: %i, end: %i\n", start, end);
+    free(r);
+    // if (p != getpid())
+    // {
+    // }
+    // else
+    // {
+    //     start = 1;
+    //     end = 2;
+    // }
     for (; start < end; start++)
     {
         for (UI32 i = 0; i <= start; i++)
@@ -174,16 +184,16 @@ Data *createSharedMemory(UI32 n, UI32 nProcess)
     ptr->a_off = offA;
     ptr->b_off = offB;
     ptr->c_off = offC;
-    ptr->nProcess = nProcess + 1;
-    ptr->processCount = nProcess;
+    ptr->processCount = nProcess + 1;
     ptr->div_off = offDiv;
     ptr->total_size = total;
     I32 *a = (I32 *)((char *)ptr + ptr->a_off);
     I32 *b = (I32 *)((char *)ptr + ptr->b_off);
     I32 *c = (I32 *)((char *)ptr + ptr->c_off);
     UI32 *i = (I32 *)((char *)ptr + ptr->div_off);
-    *i = 2;
-    *(i + 1) = (n - 2) / nProcess;
+    *i = 1;
+    *(i + 1) = (n-1) / (nProcess + 1);
+    printf("space: %i\n", *(i + 1));
     randomMatrix(a, n);
     randomMatrix(b, n);
     init(c, n);
@@ -192,8 +202,6 @@ Data *createSharedMemory(UI32 n, UI32 nProcess)
 
 void deleteSharedMemory(Data *d)
 {
-    sem_t *semC = sem_open(SEM_NAME, 0);
-    sem_close(semC);
     sem_unlink(SEM_NAME);
     munmap(d, d->total_size);
     shm_unlink(SHM_NAME);
@@ -209,39 +217,55 @@ int main(int argc, char **argv)
     UI32 nProcess = (UI32)atoi(argv[2]);
     // UI32 n = 10;
     // UI32 nProcess = 10;
+    struct timespec start, end;
+    int parentId = getpid();
     srand(1);
+    sem_unlink(SEM_NAME);
+    sem_unlink(SEM_PROCESS);
     sem_t *s = sem_open(SEM_NAME, O_CREAT | O_EXCL, 0600, 1);
-    Data *data = createSharedMemory(n, nProcess);
-    I32 *a = (I32 *)((char *)data + data->a_off);
-    I32 *b = (I32 *)((char *)data + data->b_off);
-    I32 *c = (I32 *)((char *)data + data->c_off);
-    printf("matrix a\n");
-    print(a, n);
-    printf("matrix b\n");
-    print(b, n);
-    pid_t p = 1;
-    for (UI32 i = 0; i < nProcess; i++)
+    if (s == SEM_FAILED)
     {
-        p = fork();
-        if (p < 0)
+        perror("Error creando semáforo s");
+        return 1;
+    }
+    // sem_close(s);
+    // sem_unlink(SEM_NAME);
+    // return 0;
+    Data *data = createSharedMemory(n, nProcess);
+    // I32 *a = (I32 *)((char *)data + data->a_off);
+    // I32 *b = (I32 *)((char *)data + data->b_off);
+    // printf("matrix a\n");
+    // print(a, n);
+    // printf("matrix b\n");
+    // print(b, n);
+    I32 *c = (I32 *)((char *)data + data->c_off);
+    pid_t *p = (pid_t *)malloc(sizeof(pid_t) * nProcess);
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    for (int i = 0; i < nProcess && parentId == getpid(); i++)
+        p[i] = fork();
+    multCuadratica(data, parentId);
+    if (s == SEM_FAILED)
+    {
+        s = sem_open(SEM_NAME, 0);
+        if (s == SEM_FAILED)
         {
-            perror("fork fail");
+            perror("Error accediendo al semáforo s");
             exit(1);
         }
-        if (p == 0)
-        {
-            break;
-        }
     }
-    multCuadratica(data, p);
-    s = sem_open(SEM_NAME, 1);
-    sem_wait(s);
-    data->nProcess = data->nProcess - 1;
-    if (!data->nProcess)
+    if (parentId == getpid())
     {
-        print(c, n);
+        for (int i = 0; i < nProcess; i++)
+            waitpid(p[i], NULL, 0);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+        printf("%.6f,\n", elapsed);
+        // print(c, n);
+        sem_post(s);
+        sem_close(s);
+        free(p);
         deleteSharedMemory(data);
+        return 0;
     }
-    sem_post(s);
     return 0;
 }
