@@ -123,17 +123,22 @@ int main(int argc, char **argv)
         return 1;
     }
     UI32 n = (UI32)atoi(argv[1]);
+    struct timespec start, end;
     srand(time(NULL));
     MATRIX a = randomMatrix(n);
-    printf("matrix a\n");
-    print(a, n);
+    // printf("matrix a\n");
+    // print(a, n);
     MATRIX b = randomMatrix(n);
-    printf("matrix b\n");
-    print(b, n);
+    // printf("matrix b\n");
+    // print(b, n);
     MATRIX c = init(n);
+    clock_gettime(CLOCK_MONOTONIC, &start);
     multCuadratica(a, b, c, n);
-    printf("matrix c\n");
-    print(c, n);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    // printf("matrix c\n");
+    // print(c, n);
+    double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("%.6f,\n", elapsed);
     freeMatrix(a, n);
     freeMatrix(b, n);
     freeMatrix(c, n);
