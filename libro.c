@@ -13,10 +13,8 @@
 #include <sys/wait.h>
 #define SHM_NAME "/arrays"
 #define SEM_NAME "/semC"
-#define SEM_PROCESS "/process"
 #define I32 int32_t
 #define UI32 uint32_t
-#define MATRIX I32 **
 #define ARGSNUM 3
 #define MAXNUM 5
 
@@ -92,7 +90,7 @@ void print(I32 *a, I32 n)
     }
 }
 
-void multCuadratica(Data *data, pid_t p)
+void multCuadratica(Data *data)
 {
     I32 *a = (I32 *)((char *)data + data->a_off);
     I32 *b = (I32 *)((char *)data + data->b_off);
@@ -101,16 +99,8 @@ void multCuadratica(Data *data, pid_t p)
     range *r = getWorkingRange(data);
     start = r->start;
     end = r->end;
-    printf("start: %i, end: %i\n", start, end);
+    // printf("start: %i, end: %i\n", start, end);
     free(r);
-    // if (p != getpid())
-    // {
-    // }
-    // else
-    // {
-    //     start = 1;
-    //     end = 2;
-    // }
     for (; start < end; start++)
     {
         for (UI32 i = 0; i <= start; i++)
@@ -193,7 +183,7 @@ Data *createSharedMemory(UI32 n, UI32 nProcess)
     UI32 *i = (I32 *)((char *)ptr + ptr->div_off);
     *i = 1;
     *(i + 1) = (n-1) / (nProcess + 1);
-    printf("space: %i\n", *(i + 1));
+    // printf("space: %i\n", *(i + 1));
     randomMatrix(a, n);
     randomMatrix(b, n);
     init(c, n);
@@ -221,7 +211,6 @@ int main(int argc, char **argv)
     int parentId = getpid();
     srand(1);
     sem_unlink(SEM_NAME);
-    sem_unlink(SEM_PROCESS);
     sem_t *s = sem_open(SEM_NAME, O_CREAT | O_EXCL, 0600, 1);
     if (s == SEM_FAILED)
     {
@@ -243,16 +232,7 @@ int main(int argc, char **argv)
     clock_gettime(CLOCK_MONOTONIC, &start);
     for (int i = 0; i < nProcess && parentId == getpid(); i++)
         p[i] = fork();
-    multCuadratica(data, parentId);
-    if (s == SEM_FAILED)
-    {
-        s = sem_open(SEM_NAME, 0);
-        if (s == SEM_FAILED)
-        {
-            perror("Error accediendo al semáforo s");
-            exit(1);
-        }
-    }
+    multCuadratica(data);
     if (parentId == getpid())
     {
         for (int i = 0; i < nProcess; i++)

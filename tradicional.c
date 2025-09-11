@@ -10,6 +10,7 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #define SHM_NAME "/arrays"
 #define SEM_NAME "/semC"
 #define I32 int32_t
@@ -20,7 +21,7 @@
 typedef struct
 {
     size_t a_off, b_off, c_off, div_off, total_size;
-    UI32 n, nProcess, processCount;
+    UI32 n, processCount;
 } Data;
 
 typedef struct
@@ -82,7 +83,7 @@ void print(I32 *a, I32 n)
     }
 }
 
-void multCuadratica(Data *data, pid_t p)
+void multCuadratica(Data *data)
 {
     I32 *a = (I32 *)((char *)data + data->a_off);
     I32 *b = (I32 *)((char *)data + data->b_off);
@@ -140,7 +141,6 @@ Data *createSharedMemory(UI32 n, UI32 nProcess)
     ptr->a_off = offA;
     ptr->b_off = offB;
     ptr->c_off = offC;
-    ptr->nProcess = nProcess + 1;
     ptr->processCount = nProcess + 1;
     ptr->div_off = offDiv;
     ptr->total_size = total;
@@ -175,9 +175,12 @@ int main(int argc, char **argv)
     UI32 nProcess = (UI32)atoi(argv[2]);
     // UI32 n = 2;
     // UI32 nProcess = 0;
-    pid_t p = 1;
+    pid_t *p = (pid_t *)malloc(sizeof(pid_t) * nProcess);
     srand(1);
+    sem_unlink(SEM_NAME);
     sem_t *s = sem_open(SEM_NAME, O_CREAT | O_EXCL, 0600, 1);
+    struct timespec start, end;
+    int parentId = getpid();
     Data *data = createSharedMemory(n, nProcess);
     I32 *a = (I32 *)((char *)data + data->a_off);
     I32 *b = (I32 *)((char *)data + data->b_off);
@@ -186,29 +189,23 @@ int main(int argc, char **argv)
     // print(a, n);
     // printf("matrix b\n");
     // print(b, n);
-    for (UI32 i = 0; i < nProcess; i++)
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    for (int i = 0; i < nProcess && parentId == getpid(); i++)
+        p[i] = fork();
+    multCuadratica(data);
+    if (parentId == getpid())
     {
-        p = fork();
-        if (p < 0)
-        {
-            perror("fork fail");
-            exit(1);
-        }
-        if (p == 0)
-        {
-            break;
-        }
-    }
-    multCuadratica(data, p);
-    s = sem_open(SEM_NAME, 1);
-    sem_wait(s);
-    data->nProcess = data->nProcess - 1;
-    if (!data->nProcess)
-    {
-        // printf("matrix c\n");
+        for (int i = 0; i < nProcess; i++)
+            waitpid(p[i], NULL, 0);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+        printf("%.6f,\n", elapsed);
         // print(c, n);
+        sem_post(s);
+        sem_close(s);
+        free(p);
         deleteSharedMemory(data);
+        return 0;
     }
-    sem_post(s);
     return 0;
 }
