@@ -239,7 +239,7 @@ int main(int argc, char **argv)
             waitpid(p[i], NULL, 0);
         clock_gettime(CLOCK_MONOTONIC, &end);
         double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-        printf("%.6f,\n", elapsed);
+        printf("%.6f", elapsed);
         // print(c, n);
         sem_post(s);
         sem_close(s);
