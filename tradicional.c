@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     // printf("matrix c\n");
     // print(c, n);
     double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-    printf("%.6f,\n", elapsed);
+    printf("%.6f", elapsed);
     freeMatrix(a, n);
     freeMatrix(b, n);
     freeMatrix(c, n);
