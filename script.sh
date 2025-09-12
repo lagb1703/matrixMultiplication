@@ -4,7 +4,7 @@ gcc ./libro.c -o libro.out
 gcc ./tradicional.c -o tradicional.out
 mkdir -p csv
 echo "500,1000,1500,2000,2500,3000" >csv/libro.csv
-for j in 1 2 3 4 5 6 7 8 9 10 11 12 131 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+for j in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
   for i in 500 1000 1500 2000 2500 3000; do
     ./libro.out $i >>csv/libro.csv
     if [ $i != 3000 ]; then
@@ -15,7 +15,7 @@ for j in 1 2 3 4 5 6 7 8 9 10 11 12 131 14 15 16 17 18 19 20 21 22 23 24 25 26 2
 done
 
 echo "500,1000,1500,2000,2500,3000" >csv/tradicional.csv
-for j in 1 2 3 4 5 6 7 8 9 10 11 12 131 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+for j in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
   for i in 500 1000 1500 2000 2500 3000; do
     ./tradicional.out $i >>csv/tradicional.csv
     if [ $i != 3000 ]; then
