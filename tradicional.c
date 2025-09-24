@@ -97,6 +97,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 numTreads)
         createThread(inter, &data[i % numTreads], &thread[i % numTreads]);
         if ((i + 1) % numTreads == 0)
         {
+            // printf("espera %i\n", i);
             for (UI32 j = 0; j < numTreads; j++)
             {
                 // printf("esperar %i\n", j);
@@ -105,11 +106,10 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 numTreads)
             }
         }
     }
-    for (UI32 j = 0; j < n%numTreads; j++)
+    for (UI32 j = 0; j < n % numTreads; j++)
     {
         // printf("esperar %i\n", j);
-        if (thread[j])
-            joinThread(thread[j]);
+        joinThread(thread[j]);
     }
     // for (UI32 j = 0; j < (n % numTreads == 0 ? numTreads : n % numTreads); j++)
     // {
@@ -136,14 +136,14 @@ MATRIX randomMatrix(UI32 n)
 
 int main(int argc, char **argv)
 {
-    // if (argc != ARGSNUM)
-    // {
-    //     return 1;
-    // }
-    // UI32 n = (UI32)atoi(argv[1]);
-    // UI32 numTreads = (UI32)atoi(argv[2]);
-    UI32 n = 500;
-    UI32 numTreads = 16;
+    if (argc != ARGSNUM)
+    {
+        return 1;
+    }
+    UI32 n = (UI32)atoi(argv[1]);
+    UI32 numTreads = (UI32)atoi(argv[2]);
+    // UI32 n = 500;
+    // UI32 numTreads = 16;
     srand(time(NULL));
     struct timespec start, end;
     MATRIX a = randomMatrix(n);
