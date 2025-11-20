@@ -14,8 +14,10 @@
 void freeMatrix(MATRIX a, I32 n)
 {
     if (!a) return;
-    // free contiguous block allocated at a[0]
-    free(a[0]);
+    for (I32 i = 0; i < n; i++)
+    {
+        free(a[i]);
+    }
     free(a);
 }
 
@@ -78,16 +80,6 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size_Of_Cluster);
     MPI_Comm_rank(MPI_COMM_WORLD, &processId);
-    char *ps = getenv("PMI_SIZE");
-    char *pr = getenv("PMI_RANK");
-    if (ps)
-    {
-        size_Of_Cluster = atoi(ps);
-    }
-    if (pr)
-    {
-        processId = atoi(pr);
-    }
     if (argc != ARGSNUM)
     {
         MPI_Finalize();
@@ -108,18 +100,13 @@ int main(int argc, char **argv)
     {
         a = (MATRIX)malloc(sizeof(I32 *) * n);
         b = (MATRIX)malloc(sizeof(I32 *) * n);
-        I32 *adata = (I32 *)malloc(sizeof(I32) * n * n);
-        I32 *bdata = (I32 *)malloc(sizeof(I32) * n * n);
         for (UI32 i = 0; i < n; i++)
         {
-            a[i] = adata + i * n;
-            b[i] = bdata + i * n;
+            a[i] = (I32 *)malloc(sizeof(I32) * n);
+            b[i] = (I32 *)malloc(sizeof(I32) * n);
         }
     }
     printf("process %i of %i\n", processId, size_Of_Cluster);
-    int world_rank, world_size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     printf("matrix a\n");
     print(a, n);
     MPI_Barrier(MPI_COMM_WORLD);
