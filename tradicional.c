@@ -13,7 +13,8 @@
 
 void freeMatrix(MATRIX a, I32 n)
 {
-    if (!a) return;
+    if (!a)
+        return;
     // if (n == 0)
     // {
     //     free(a);
@@ -88,7 +89,10 @@ MATRIX randomMatrix(UI32 n)
 
 void broadcastMatrix(MATRIX a, UI32 n)
 {
-    MPI_Bcast(a[0], n, MPI_INT, 0, MPI_COMM_WORLD);
+    for (int i = 0; i < n; i++)
+    {
+        MPI_Bcast(a[i], n, MPI_INT, 0, MPI_COMM_WORLD);
+    }
 }
 
 int main(int argc, char **argv)
