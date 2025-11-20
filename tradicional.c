@@ -36,22 +36,22 @@ void print(MATRIX a, I32 n)
     }
 }
 
-MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n)
+MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 endMatrix)
 {
-    MATRIX result = (MATRIX)malloc(sizeof(I32 *) * n);
-    for (I32 i = 0; i < n; i++)
+    UI32 total = endMatrix - beginMatrix;
+    MATRIX result = (MATRIX)malloc(sizeof(I32 *) * total);
+    for (I32 i = 0; i < total; i++)
     {
         result[i] = (I32 *)malloc(sizeof(I32) * n);
         for (I32 j = 0; j < n; j++)
         {
-            I32 partial = 0;
+            result[i][j] = 0;
             for (I32 k = 0; k < n; k++)
             {
-                partial += a[i][k] * b[k][j];
+                result[i][j] += a[i][k] * b[k][j];
                 // printf("%i a%i,%i %i b%i, %i\n", a[i][k], i+1, k+1, b[k][j], k+1, j+1);
             }
             // printf("\n");
-            result[i][j] = partial;
         }
     }
     return result;
@@ -124,10 +124,63 @@ int main(int argc, char **argv)
     // printf("matrix a\n");
     printf("b = %i, e = %i\n", beginMatrix, endMatrix);
     // print(a, n);
+    MATRIX c = multCuadratica(a, b, n, beginMatrix, endMatrix);
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
     {
+        MATRIX response = (MATRIX)malloc(sizeof(I32 *) * n);
+        I32 *responseData = (I32 *)malloc(sizeof(I32) * n * n);
+        for (UI32 i = 0; i < n; i++)
+        {
+            response[i] = responseData + i * n;
+        }
+
+        /* Copiar las filas calculadas por el proceso 0 */
+        UI32 total0 = endMatrix - beginMatrix;
+        for (UI32 i = 0; i < total0; i++)
+        {
+            for (UI32 j = 0; j < n; j++)
+                response[beginMatrix + i][j] = c[i][j];
+        }
+
+        /* Recibir las submatrices de los otros procesos */
+        for (int pid = 1; pid < size_Of_Cluster; pid++)
+        {
+            I32 pBegin = work * pid + min(pid, loseWork);
+            I32 pEnd = pBegin + work;
+            if (loseWork - pid > 0)
+                pEnd += 1;
+            UI32 pTotal = pEnd - pBegin;
+            if (pTotal <= 0)
+                continue;
+
+            UI32 recvTotal = 0;
+            MPI_Recv(&recvTotal, 1, MPI_INT, pid, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            /* recvTotal debería ser igual a pTotal */
+            for (UI32 i = 0; i < pTotal; i++)
+            {
+                MPI_Recv(response[pBegin + i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+        }
+
         clock_gettime(CLOCK_MONOTONIC, &end);
+
+        /* Imprimir la matriz resultante completa */
+        print(response, n);
+
+        free(responseData);
+        free(response);
+    }
+    else
+    {
+        UI32 total = endMatrix - beginMatrix;
+        /* Enviar al proceso 0 cuántas filas se van a mandar */
+        MPI_Send(&total, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        /* Enviar cada fila de la submatriz c */
+        for (UI32 i = 0; i < total; i++)
+        {
+            MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
+        }
     }
     // freeMatrix(a, n);
     // freeMatrix(b, n);
