@@ -157,6 +157,7 @@ int main(int argc, char **argv)
             }
         }
         clock_gettime(CLOCK_MONOTONIC, &end);
+        printf("result: \n");
         print(response, n);
         free(response);
     }
@@ -166,6 +167,10 @@ int main(int argc, char **argv)
         for (UI32 i = 0; i < total; i++)
         {
             MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
+            printf("process %i of %i\n", processId, size_Of_Cluster);
+            for(UI32 j = 0; j < n; j++){
+                printf("%i ", c[i][j]);
+            }
         }
     }
     // freeMatrix(a, n);
