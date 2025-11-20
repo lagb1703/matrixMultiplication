@@ -148,6 +148,7 @@ int main(int argc, char **argv)
                 continue;
             for (UI32 i = 0; i < pTotal; i++)
             {
+                response[pBegin + i] = (I32 *)malloc(sizeof(I32) * n);
                 MPI_Recv(response[pBegin + i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
         }
