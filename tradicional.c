@@ -136,7 +136,7 @@ int main(int argc, char **argv)
         {
             response[i] = (I32 *)malloc(sizeof(I32) * n);
             memcpy(&response[i], &c[i], sizeof(I32) * n);
-            for(UI32  = 0; j < n; j++){
+            for(UI32 j = 0; j < n; j++){
                 printf("%i ", response[i]);
             }
             printf("\n");
