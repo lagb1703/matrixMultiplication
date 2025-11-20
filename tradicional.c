@@ -15,23 +15,6 @@ void freeMatrix(MATRIX a, I32 n)
 {
     if (!a)
         return;
-    // if (n == 0)
-    // {
-    //     free(a);
-    //     return;
-    // }
-    // if (n == 1)
-    // {
-    //     free(a[0]);
-    //     free(a);
-    //     return;
-    // }
-    // if (a[1] == a[0] + n)
-    // {
-    //     free(a[0]);
-    //     free(a);
-    //     return;
-    // }
     for (I32 i = 0; i < n; i++)
     {
         free(a[i]);
@@ -136,8 +119,8 @@ int main(int argc, char **argv)
     {
         clock_gettime(CLOCK_MONOTONIC, &end);
     }
-    freeMatrix(a, n);
-    freeMatrix(b, n);
+    // freeMatrix(a, n);
+    // freeMatrix(b, n);
     // freeMatrix(c, n);
     MPI_Finalize();
     return 0;
