@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <mpi.h>
 #include <unistd.h>
+#include <string.h>
 #define I32 int32_t
 #define UI32 uint32_t
 #define MATRIX I32 **
