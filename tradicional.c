@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "time.h"
 #include <stdio.h>
+#include <mpi.h>
+#include <unistd.h>
 #define I32 int32_t
 #define UI32 uint32_t
 #define MATRIX I32 **
@@ -11,10 +13,9 @@
 
 void freeMatrix(MATRIX a, I32 n)
 {
-    for (UI32 i = 0; i < n; i++)
-    {
-        free(a[i]);
-    }
+    if (!a) return;
+    // free contiguous block allocated at a[0]
+    free(a[0]);
     free(a);
 }
 
@@ -54,9 +55,10 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n)
 MATRIX randomMatrix(UI32 n)
 {
     MATRIX result = (MATRIX)malloc(sizeof(I32 *) * n);
+    I32 *data = (I32 *)malloc(sizeof(I32) * n * n);
     for (UI32 i = 0; i < n; i++)
     {
-        result[i] = (I32 *)malloc(sizeof(I32) * n);
+        result[i] = data + i * n;
         for (UI32 j = 0; j < n; j++)
         {
             result[i][j] = rand() % MAXNUM;
@@ -65,30 +67,69 @@ MATRIX randomMatrix(UI32 n)
     return result;
 }
 
+void broadcastMatrix(MATRIX a, UI32 n)
+{
+    MPI_Bcast(a[0], n * n, MPI_INT, 0, MPI_COMM_WORLD);
+}
+
 int main(int argc, char **argv)
 {
+    int processId, size_Of_Cluster;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size_Of_Cluster);
+    MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+    char *ps = getenv("PMI_SIZE");
+    char *pr = getenv("PMI_RANK");
+    if (ps)
+    {
+        size_Of_Cluster = atoi(ps);
+    }
+    if (pr)
+    {
+        processId = atoi(pr);
+    }
     if (argc != ARGSNUM)
     {
+        MPI_Finalize();
         return 1;
     }
     UI32 n = (UI32)atoi(argv[1]);
+    MATRIX a;
+    MATRIX b;
     struct timespec start, end;
-    srand(time(NULL));
-    MATRIX a = randomMatrix(n);
-    // printf("matrix a\n");
-    // print(a, n);
-    MATRIX b = randomMatrix(n);
-    // printf("matrix b\n");
-    // print(b, n);
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    MATRIX c = multCuadratica(a, b, n);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    // printf("matrix c\n");
-    // print(c, n);
-    double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-    printf("%.6f", elapsed);
+    if (processId == 0)
+    {
+        srand(time(NULL));
+        a = randomMatrix(n);
+        b = randomMatrix(n);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+    }
+    else
+    {
+        a = (MATRIX)malloc(sizeof(I32 *) * n);
+        b = (MATRIX)malloc(sizeof(I32 *) * n);
+        I32 *adata = (I32 *)malloc(sizeof(I32) * n * n);
+        I32 *bdata = (I32 *)malloc(sizeof(I32) * n * n);
+        for (UI32 i = 0; i < n; i++)
+        {
+            a[i] = adata + i * n;
+            b[i] = bdata + i * n;
+        }
+    }
+    printf("process %i of %i\n", processId, size_Of_Cluster);
+    int world_rank, world_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    printf("matrix a\n");
+    print(a, n);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (processId == 0)
+    {
+        clock_gettime(CLOCK_MONOTONIC, &end);
+    }
     freeMatrix(a, n);
     freeMatrix(b, n);
-    freeMatrix(c, n);
+    // freeMatrix(c, n);
+    MPI_Finalize();
     return 0;
 }
