@@ -41,7 +41,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 endMatr
 {
     UI32 total = endMatrix - beginMatrix;
     MATRIX result = (MATRIX)malloc(sizeof(I32 *) * total);
-    for (I32 i = beginMatrix; i < endMatrix; i++)
+    for (I32 i = 0; i < total; i++)
     {
         result[i] = (I32 *)malloc(sizeof(I32) * n);
         for (I32 j = 0; j < n; j++)
@@ -49,7 +49,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 endMatr
             result[i][j] = 0;
             for (I32 k = 0; k < n; k++)
             {
-                result[i][j] += a[i][k] * b[k][j];
+                result[i][j] += a[i + beginMatrix][k] * b[k][j];
                 // printf("%i a%i,%i %i b%i, %i\n", a[i][k], i+1, k+1, b[k][j], k+1, j+1);
             }
             // printf("\n");
