@@ -123,7 +123,6 @@ int main(int argc, char **argv)
             b[i] = (I32 *)malloc(sizeof(I32) * n);
         }
     }
-    printf("process %i of %i\n", processId, size_Of_Cluster);
     broadcastMatrix(a, n);
     broadcastMatrix(b, n);
     MATRIX c = multCuadratica(a, b, n, beginMatrix, endMatrix);
@@ -132,10 +131,15 @@ int main(int argc, char **argv)
     {
         MATRIX response = (MATRIX)malloc(sizeof(I32 *) * n);
         UI32 total0 = endMatrix - beginMatrix;
+        printf("process %i of %i\n", processId, size_Of_Cluster);
         for (UI32 i = 0; i < total0; i++)
         {
             response[i] = (I32 *)malloc(sizeof(I32) * n);
             memcpy(&response[i], &c[i], sizeof(I32) * n);
+            for(UI32  = 0; j < n; j++){
+                printf("%i ", response[i]);
+            }
+            printf("\n");
         }
         for (int pid = 1; pid < size_Of_Cluster; pid++)
         {
