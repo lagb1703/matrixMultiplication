@@ -14,23 +14,23 @@
 void freeMatrix(MATRIX a, I32 n)
 {
     if (!a) return;
-    if (n == 0)
-    {
-        free(a);
-        return;
-    }
-    if (n == 1)
-    {
-        free(a[0]);
-        free(a);
-        return;
-    }
-    if (a[1] == a[0] + n)
-    {
-        free(a[0]);
-        free(a);
-        return;
-    }
+    // if (n == 0)
+    // {
+    //     free(a);
+    //     return;
+    // }
+    // if (n == 1)
+    // {
+    //     free(a[0]);
+    //     free(a);
+    //     return;
+    // }
+    // if (a[1] == a[0] + n)
+    // {
+    //     free(a[0]);
+    //     free(a);
+    //     return;
+    // }
     for (I32 i = 0; i < n; i++)
     {
         free(a[i]);
@@ -88,7 +88,7 @@ MATRIX randomMatrix(UI32 n)
 
 void broadcastMatrix(MATRIX a, UI32 n)
 {
-    MPI_Bcast(a[0], n * n, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(a[0], n, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
 int main(int argc, char **argv)
@@ -117,12 +117,10 @@ int main(int argc, char **argv)
     {
         a = (MATRIX)malloc(sizeof(I32 *) * n);
         b = (MATRIX)malloc(sizeof(I32 *) * n);
-        I32 *adata = (I32 *)malloc(sizeof(I32) * n * n);
-        I32 *bdata = (I32 *)malloc(sizeof(I32) * n * n);
         for (UI32 i = 0; i < n; i++)
         {
-            a[i] = adata + i * n;
-            b[i] = bdata + i * n;
+            a[i] = (I32 *)malloc(sizeof(I32) * n);
+            b[i] = (I32 *)malloc(sizeof(I32) * n);
         }
     }
     printf("process %i of %i\n", processId, size_Of_Cluster);
