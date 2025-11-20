@@ -75,7 +75,7 @@ void broadcastMatrix(MATRIX a, UI32 n)
     for (int i = 0; i < n; i++)
     {
         printf("Esto es una mala idea");
-        MPI_Bcast(a[i], n, MPI_INT, 0, MPI_COMM_WORLD);
+        // MPI_Bcast(a[i], n, MPI_INT, 0, MPI_COMM_WORLD);
     }
 }
 
