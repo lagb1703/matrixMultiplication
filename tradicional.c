@@ -96,11 +96,7 @@ int main(int argc, char **argv)
     MATRIX b;
     I32 work = n / size_Of_Cluster;
     I32 loseWork = n % size_Of_Cluster;
-    I32 beginMatrix = work * processId;
-    if (minimun != 0)
-    {
-        beginMatrix += min(processId, loseWork);
-    }
+    I32 beginMatrix = work * processId + min(processId, loseWork);
     I32 endMatrix = beginMatrix + work;
     if (loseWork - processId > 0)
         endMatrix += 1;
