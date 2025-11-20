@@ -74,8 +74,7 @@ void broadcastMatrix(MATRIX a, UI32 n)
 {
     for (int i = 0; i < n; i++)
     {
-        printf("Esto es una mala idea");
-        // MPI_Bcast(a[i], n, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(a[i], n, MPI_INT, 0, MPI_COMM_WORLD);
     }
 }
 
@@ -112,6 +111,7 @@ int main(int argc, char **argv)
         }
     }
     printf("process %i of %i\n", processId, size_Of_Cluster);
+    broadcastMatrix(a, n);
     printf("matrix a\n");
     print(a, n);
     MPI_Barrier(MPI_COMM_WORLD);
