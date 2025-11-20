@@ -41,7 +41,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 endMatr
 {
     UI32 total = endMatrix - beginMatrix;
     MATRIX result = (MATRIX)malloc(sizeof(I32 *) * total);
-    for (I32 i = 0; i < total; i++)
+    for (I32 i = beginMatrix; i < endMatrix; i++)
     {
         result[i] = (I32 *)malloc(sizeof(I32) * n);
         for (I32 j = 0; j < n; j++)
