@@ -10,6 +10,8 @@
 #define MATRIX I32 **
 #define ARGSNUM 2
 #define MAXNUM 10
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 
 void freeMatrix(MATRIX a, I32 n)
 {
@@ -92,6 +94,16 @@ int main(int argc, char **argv)
     UI32 n = (UI32)atoi(argv[1]);
     MATRIX a;
     MATRIX b;
+    I32 work = n / size_Of_Cluster;
+    I32 loseWork = n % size_Of_Cluster;
+    I32 beginMatrix = work * processId;
+    if (minimun != 0)
+    {
+        beginMatrix += min(processId, loseWork);
+    }
+    I32 endMatrix = beginMatrix + work;
+    if (loseWork - processId > 0)
+        endMatrix += 1;
     struct timespec start, end;
     if (processId == 0)
     {
@@ -112,8 +124,10 @@ int main(int argc, char **argv)
     }
     printf("process %i of %i\n", processId, size_Of_Cluster);
     broadcastMatrix(a, n);
-    printf("matrix a\n");
-    print(a, n);
+    broadcastMatrix(b, n);
+    // printf("matrix a\n");
+    printf("b = %i, e = %i\n", beginMatrix, endMatrix);
+    // print(a, n);
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
     {
