@@ -151,8 +151,8 @@ int main(int argc, char **argv)
             total += pTotal;
         }
         clock_gettime(CLOCK_MONOTONIC, &end);
-        // printf("result: \n");
-        // print(response, n);
+        printf("result: \n");
+        print(response, n);
         free(response);
     }
     else
