@@ -128,12 +128,11 @@ int main(int argc, char **argv)
     if (processId == 0)
     {
         MATRIX response = (MATRIX)malloc(sizeof(I32 *) * n);
-        // printf("process %i of %i\n", processId, size_Of_Cluster);
-        // for (UI32 i = 0; i < total; i++)
-        // {
-        //     response[i] = (I32 *)malloc(sizeof(I32) * n);
-        //     memcpy(response[i], c[i], sizeof(I32) * n);
-        // }
+        for (UI32 i = 0; i < total; i++)
+        {
+            response[i] = (I32 *)malloc(sizeof(I32) * n);
+            memcpy(response[i], c[i], sizeof(I32) * n);
+        }
         for (int pid = 1; pid < size_Of_Cluster; pid++)
         {
             I32 pBegin = work * pid + min(pid, loseWork);
@@ -149,10 +148,10 @@ int main(int argc, char **argv)
                 MPI_Recv(response[i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
         }
-        // clock_gettime(CLOCK_MONOTONIC, &end);
-        // printf("result: \n");
-        // print(response, n);
-        // free(response);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        printf("result: \n");
+        print(response, n);
+        free(response);
     }
     else
     {
@@ -160,9 +159,9 @@ int main(int argc, char **argv)
         {
             MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
             // printf("process %i of %i\n", processId, size_Of_Cluster);
-            for(UI32 j = 0; j < n; j++){
-                printf("%i ", c[i][j]);
-            }
+            // for(UI32 j = 0; j < n; j++){
+            //     printf("%i ", c[i][j]);
+            // }
         }
     }
     // freeMatrix(a, n);
