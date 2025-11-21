@@ -85,14 +85,14 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
     for (I32 i = 0; i < total; i++)
     {
         c[i] = (I32 *)malloc(sizeof(I32) * n);
-        // for (I32 j = 0; j < n; j++)
-        // {
+        for (I32 j = 0; j < n; j++)
+        {
         //     c[i][j] = 0;
         //     for (I32 k = 0; k < n; k++)
         //     {
         //         c[i][j] += a[i + beginMatrix][k] * b[k][j];
         //     }
-        // }
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
