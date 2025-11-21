@@ -39,20 +39,20 @@ void print(MATRIX a, I32 n)
 
 MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 total)
 {
-    MATRIX result = (MATRIX)malloc(sizeof(I32 *) * total);
+    MATRIX c = (MATRIX)malloc(sizeof(I32 *) * total);
     for (I32 i = 0; i < total; i++)
     {
-        result[i] = (I32 *)malloc(sizeof(I32) * n);
+        c[i] = (I32 *)malloc(sizeof(I32) * n);
         for (I32 j = 0; j < n; j++)
         {
-            result[i][j] = 0;
+            c[i][j] = 0;
             for (I32 k = 0; k < n; k++)
             {
-                result[i][j] += a[i + beginMatrix][k] * b[k][j];
+                c[i][j] += a[i + beginMatrix][k] * b[k][j];
             }
         }
     }
-    return result;
+    return c;
 }
 
 MATRIX randomMatrix(UI32 n)
@@ -160,14 +160,10 @@ int main(int argc, char **argv)
         for (UI32 i = 0; i < total; i++)
         {
             MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
-            // printf("process %i of %i\n", processId, size_Of_Cluster);
-            // for(UI32 j = 0; j < n; j++){
-            //     printf("%i ", c[i][j]);
-            // }
         }
     }
-    // freeMatrix(a, n);
-    // freeMatrix(b, n);
+    freeMatrix(a, n);
+    freeMatrix(b, n);
     // freeMatrix(c, n);
     MPI_Finalize();
     return 0;
