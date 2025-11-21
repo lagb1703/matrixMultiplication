@@ -139,21 +139,22 @@ int main(int argc, char **argv)
         //     }
         //     printf("\n");
         // }
-        // for (int pid = 1; pid < size_Of_Cluster; pid++)
-        // {
-        //     I32 pBegin = work * pid + min(pid, loseWork);
-        //     I32 pEnd = pBegin + work;
-        //     if (loseWork - pid > 0)
-        //         pEnd += 1;
-        //     UI32 pTotal = pEnd - pBegin;
-        //     if (pTotal <= 0)
-        //         continue;
-        //     for (UI32 i = 0; i < pTotal; i++)
-        //     {
-        //         response[pBegin + i] = (I32 *)malloc(sizeof(I32) * n);
-        //         MPI_Recv(response[pBegin + i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        //     }
-        // }
+        for (int pid = 1; pid < size_Of_Cluster; pid++)
+        {
+            I32 pBegin = work * pid + min(pid, loseWork);
+            I32 pEnd = pBegin + work;
+            if (loseWork - pid > 0)
+                pEnd += 1;
+            UI32 pTotal = pEnd - pBegin;
+            printf("%i\n", pTotal);
+            if (pTotal <= 0)
+                continue;
+            for (UI32 i = 0; i < pTotal; i++)
+            {
+                response[pBegin + i] = (I32 *)malloc(sizeof(I32) * n);
+                // MPI_Recv(response[pBegin + i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+        }
         // clock_gettime(CLOCK_MONOTONIC, &end);
         // printf("result: \n");
         // print(response, n);
