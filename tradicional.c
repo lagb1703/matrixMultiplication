@@ -112,7 +112,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
             total += pTotal;
         }
         MPI_Finalize();
-        return response;
+        return c;
     }
     for (UI32 i = 0; i < total; i++)
     {
