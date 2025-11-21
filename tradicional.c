@@ -111,7 +111,9 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
             }
             total += pTotal;
         }
+        printf("pepe el mago\n");
         MPI_Finalize();
+        printf("pepe el mago\n");
         return c;
     }
     for (UI32 i = 0; i < total; i++)
@@ -187,6 +189,7 @@ int main(int argc, char **argv)
     broadcastMatrix(a, n);
     broadcastMatrix(b, n);
     MATRIX c = multCuadratica(a, b, n, processId, size_Of_Cluster);
+    printf("pepe el mago\n");
     // print(c, n);
     double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
     printf("%.6f", elapsed);
