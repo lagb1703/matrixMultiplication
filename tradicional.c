@@ -111,6 +111,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, I32 processId, UI32 size_Of_Cl
             }
             total += pTotal;
         }
+        MPI_Finalize();
         return c;
     }
     for (UI32 i = 0; i < total; i++)
@@ -119,6 +120,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, I32 processId, UI32 size_Of_Cl
     }
     freeMatrix(a, n);
     freeMatrix(b, n);
+    MPI_Finalize();
     free(c);
     exit(0);
 }
@@ -192,6 +194,5 @@ int main(int argc, char **argv)
     freeMatrix(a, n);
     freeMatrix(b, n);
     freeMatrix(c, n);
-    MPI_Finalize();
     return 0;
 }
