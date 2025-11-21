@@ -112,7 +112,6 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
             total += pTotal;
         }
         printf("pepe el mago\n");
-        MPI_Finalize();
         printf("pepe el mago\n");
         return c;
     }
@@ -120,11 +119,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
     {
         MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
     }
-    MPI_Finalize();
-    freeMatrix(a, n);
-    freeMatrix(b, n);
-    free(c);
-    exit(0);
+    return c;
 }
 
 MATRIX randomMatrix(UI32 n)
@@ -196,6 +191,8 @@ int main(int argc, char **argv)
     clock_gettime(CLOCK_MONOTONIC, &end);
     freeMatrix(a, n);
     freeMatrix(b, n);
-    freeMatrix(c, n);
+    free(c);
+    // freeMatrix(c, n);
+    MPI_Finalize();
     return 0;
 }
