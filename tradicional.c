@@ -76,6 +76,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
     I32 loseWork = n % size_Of_Cluster;
     I32 beginMatrix = work * processId + min(processId, loseWork);
     I32 endMatrix = beginMatrix + work;
+    printf("2\n");
     if (loseWork - processId > 0)
         endMatrix += 1;
     UI32 total = endMatrix - beginMatrix;
@@ -95,7 +96,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
     {
-        printf("1\n");
+        printf("3\n");
         for (int pid = 1; pid < size_Of_Cluster; pid++)
         {
             I32 pBegin = work * pid + min(pid, loseWork);
@@ -163,10 +164,11 @@ int main(int argc, char **argv)
     struct timespec start, end;
     if (processId == 0)
     {
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        printf("1\n");
         srand(time(NULL));
         a = randomMatrix(n);
         b = randomMatrix(n);
-        clock_gettime(CLOCK_MONOTONIC, &start);
         // printf("matrix a\n");
         // print(a, n);
         // printf("matrix b\n");
@@ -184,6 +186,7 @@ int main(int argc, char **argv)
     }
     broadcastMatrix(a, n);
     broadcastMatrix(b, n);
+    printf("1.5\n");
     MATRIX c = multCuadratica(a, b, n, processId, size_Of_Cluster);
     printf("pepe el mago\n");
     // print(c, n);
@@ -192,7 +195,7 @@ int main(int argc, char **argv)
     clock_gettime(CLOCK_MONOTONIC, &end);
     freeMatrix(a, n);
     freeMatrix(b, n);
-    free(c);
+    // free(c);
     // freeMatrix(c, n);
     MPI_Finalize();
     return 0;
