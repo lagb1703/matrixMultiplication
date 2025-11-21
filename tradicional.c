@@ -50,9 +50,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 endMatr
             for (I32 k = 0; k < n; k++)
             {
                 result[i][j] += a[i + beginMatrix][k] * b[k][j];
-                // printf("%i a%i,%i %i b%i, %i\n", a[i][k], i+1, k+1, b[k][j], k+1, j+1);
             }
-            // printf("\n");
         }
     }
     return result;
@@ -135,7 +133,7 @@ int main(int argc, char **argv)
         for (UI32 i = 0; i < total0; i++)
         {
             response[i] = (I32 *)malloc(sizeof(I32) * n);
-            memcpy(&response[i], &c[i], sizeof(I32) * n);
+            memcpy(response[i], c[i], sizeof(I32) * n);
             for(UI32 j = 0; j < n; j++){
                 printf("%i ", response[i][j]);
             }
