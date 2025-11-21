@@ -144,13 +144,15 @@ int main(int argc, char **argv)
                 continue;
             for (UI32 i = total; i < total + pTotal; i++)
             {
+                print("%i\n", i);
                 response[i] = (I32 *)malloc(sizeof(I32) * n);
                 MPI_Recv(response[i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
+            total += pTotal;
         }
         clock_gettime(CLOCK_MONOTONIC, &end);
-        printf("result: \n");
-        print(response, n);
+        // printf("result: \n");
+        // print(response, n);
         free(response);
     }
     else
