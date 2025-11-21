@@ -84,14 +84,16 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
     printf("2.1, begin = %i\n", beginMatrix);
     for (I32 i = 0; i < total; i++)
     {
-        c[i] = (I32 *)malloc(sizeof(I32) * n);
+        I32 global = i + beginMatrix;
+        c[global] = (I32 *)malloc(sizeof(I32) * n);
         for (I32 j = 0; j < n; j++)
         {
-            c[i][j] = 0;
+            c[global][j] = 0;
             for (I32 k = 0; k < n; k++)
             {
-                printf("2 processId = %i, i + beginMatrix = %i\n", processId, i + beginMatrix);
-                c[i][j] += a[i + beginMatrix][k] * b[k][j];
+                /* debug: processId y fila global */
+                printf("2 processId = %i, i + beginMatrix = %i\n", processId, global);
+                c[global][j] += a[global][k] * b[k][j];
             }
         }
     }
@@ -108,20 +110,22 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
             UI32 pTotal = pEnd - pBegin;
             if (pTotal <= 0)
                 continue;
-            for (UI32 i = total; i < total + pTotal; i++)
+            /* Recibir filas del proceso pid y colocarlas en su posición global */
+            for (I32 row = pBegin; row < pEnd; row++)
             {
-                printf("%i\n", i);
-                c[i] = (I32 *)malloc(sizeof(I32) * n);
-                MPI_Recv(c[i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                printf("recibiendo fila %i del pid %i\n", row, pid);
+                c[row] = (I32 *)malloc(sizeof(I32) * n);
+                MPI_Recv(c[row], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
-            total += pTotal;
         }
         printf("pepe el mago\n");
         return c;
     }
-    for (UI32 i = 0; i < total; i++)
+    /* procesos no raíz envían sus filas usando índice global */
+    for (I32 i = 0; i < total; i++)
     {
-        MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
+        I32 global = i + beginMatrix;
+        MPI_Send(c[global], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
     }
     return c;
 }
@@ -191,9 +195,12 @@ int main(int argc, char **argv)
     printf("1.5\n");
     MATRIX c = multCuadratica(a, b, n, processId, size_Of_Cluster);
     // print(c, n);
-    double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-    printf("%.6f", elapsed);
     clock_gettime(CLOCK_MONOTONIC, &end);
+    if (processId == 0)
+    {
+        double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+        printf("%.6f\n", elapsed);
+    }
     freeMatrix(a, n);
     freeMatrix(b, n);
     // free(c);
