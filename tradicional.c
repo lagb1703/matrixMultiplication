@@ -117,7 +117,10 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, I32 processId, UI32 size_Of_Cl
     {
         MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
     }
-    return c;
+    freeMatrix(a, n);
+    freeMatrix(b, n);
+    free(c);
+    exit(0);
 }
 
 MATRIX randomMatrix(UI32 n)
@@ -188,8 +191,7 @@ int main(int argc, char **argv)
     clock_gettime(CLOCK_MONOTONIC, &end);
     freeMatrix(a, n);
     freeMatrix(b, n);
-    // free(c);
-    // freeMatrix(c, n);
+    freeMatrix(c, n);
     MPI_Finalize();
     return 0;
 }
