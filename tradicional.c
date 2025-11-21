@@ -18,30 +18,41 @@ void freeMatrix(MATRIX a, I32 n)
 {
     if (!a)
         return;
-    if (n <= 0) {
+    if (n <= 0)
+    {
         free(a);
         return;
     }
     I32 *first = a[0];
-    if (!first) {
-        for (I32 i = 0; i < n; i++) {
-            if (a[i]) free(a[i]);
+    if (!first)
+    {
+        for (I32 i = 0; i < n; i++)
+        {
+            if (a[i])
+                free(a[i]);
         }
         free(a);
         return;
     }
     int is_contiguous = 1;
-    for (I32 i = 0; i < n; i++) {
-        if (a[i] != first + (I32)((I32)i * (I32)n)) {
+    for (I32 i = 0; i < n; i++)
+    {
+        if (a[i] != first + (I32)((I32)i * (I32)n))
+        {
             is_contiguous = 0;
             break;
         }
     }
-    if (is_contiguous) {
+    if (is_contiguous)
+    {
         free(first);
-    } else {
-        for (I32 i = 0; i < n; i++) {
-            if (a[i]) free(a[i]);
+    }
+    else
+    {
+        for (I32 i = 0; i < n; i++)
+        {
+            if (a[i])
+                free(a[i]);
         }
     }
     free(a);
@@ -59,9 +70,16 @@ void print(MATRIX a, I32 n)
     }
 }
 
-MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 total)
+MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_Cluster)
 {
-    MATRIX c = (MATRIX)malloc(sizeof(I32 *) * total);
+    I32 work = n / size_Of_Cluster;
+    I32 loseWork = n % size_Of_Cluster;
+    I32 beginMatrix = work * processId + min(processId, loseWork);
+    I32 endMatrix = beginMatrix + work;
+    if (loseWork - processId > 0)
+        endMatrix += 1;
+    UI32 total = endMatrix - beginMatrix;
+    MATRIX c = (MATRIX)malloc(sizeof(I32 *) * n);
     for (I32 i = 0; i < total; i++)
     {
         c[i] = (I32 *)malloc(sizeof(I32) * n);
@@ -74,7 +92,37 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 total)
             }
         }
     }
-    return c;
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (processId == 0)
+    {
+        for (int pid = 1; pid < size_Of_Cluster; pid++)
+        {
+            I32 pBegin = work * pid + min(pid, loseWork);
+            I32 pEnd = pBegin + work;
+            if (loseWork - pid > 0)
+                pEnd += 1;
+            UI32 pTotal = pEnd - pBegin;
+            if (pTotal <= 0)
+                continue;
+            for (UI32 i = total; i < total + pTotal; i++)
+            {
+                c[i] = (I32 *)malloc(sizeof(I32) * n);
+                MPI_Recv(c[i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+            total += pTotal;
+        }
+        MPI_Finalize();
+        return response;
+    }
+    for (UI32 i = 0; i < total; i++)
+    {
+        MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
+    }
+    MPI_Finalize();
+    freeMatrix(a, n);
+    freeMatrix(b, n);
+    free(c);
+    exit(0);
 }
 
 MATRIX randomMatrix(UI32 n)
@@ -114,13 +162,6 @@ int main(int argc, char **argv)
     UI32 n = (UI32)atoi(argv[1]);
     MATRIX a;
     MATRIX b;
-    I32 work = n / size_Of_Cluster;
-    I32 loseWork = n % size_Of_Cluster;
-    I32 beginMatrix = work * processId + min(processId, loseWork);
-    I32 endMatrix = beginMatrix + work;
-    if (loseWork - processId > 0)
-        endMatrix += 1;
-    UI32 total = endMatrix - beginMatrix;
     struct timespec start, end;
     if (processId == 0)
     {
@@ -145,48 +186,11 @@ int main(int argc, char **argv)
     }
     broadcastMatrix(a, n);
     broadcastMatrix(b, n);
-    MATRIX c = multCuadratica(a, b, n, beginMatrix, total);
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (processId == 0)
-    {
-        MATRIX response = (MATRIX)malloc(sizeof(I32 *) * n);
-        for (UI32 i = 0; i < total; i++)
-        {
-            response[i] = (I32 *)malloc(sizeof(I32) * n);
-            memcpy(response[i], c[i], sizeof(I32) * n);
-        }
-        for (int pid = 1; pid < size_Of_Cluster; pid++)
-        {
-            I32 pBegin = work * pid + min(pid, loseWork);
-            I32 pEnd = pBegin + work;
-            if (loseWork - pid > 0)
-                pEnd += 1;
-            UI32 pTotal = pEnd - pBegin;
-            if (pTotal <= 0)
-                continue;
-            for (UI32 i = total; i < total + pTotal; i++)
-            {
-                printf("%i\n", i);
-                response[i] = (I32 *)malloc(sizeof(I32) * n);
-                MPI_Recv(response[i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            }
-            total += pTotal;
-        }
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        printf("result: \n");
-        print(response, n);
-        free(response);
-    }
-    else
-    {
-        for (UI32 i = 0; i < total; i++)
-        {
-            MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
-        }
-    }
+    MATRIX c = multCuadratica(a, b, n, processId, size_Of_Cluster);
+    print(c, n);
+    clock_gettime(CLOCK_MONOTONIC, &end);
     freeMatrix(a, n);
     freeMatrix(b, n);
-    // freeMatrix(c, n);
-    MPI_Finalize();
+    freeMatrix(c, n);
     return 0;
 }
