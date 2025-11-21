@@ -70,7 +70,7 @@ void print(MATRIX a, I32 n)
     }
 }
 
-MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_Cluster)
+MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, I32 processId, UI32 size_Of_Cluster)
 {
     I32 work = n / size_Of_Cluster;
     I32 loseWork = n % size_Of_Cluster;
