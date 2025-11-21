@@ -79,7 +79,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
     if (loseWork - processId > 0)
         endMatrix += 1;
     UI32 total = endMatrix - beginMatrix;
-    printf("2\n");
+    printf("2 processId = %i, beginMatrix = %i\n", processId, beginMatrix);
     MATRIX c = (MATRIX)malloc(sizeof(I32 *) * n);
     printf("2.1, begin = %i\n", beginMatrix);
     for (I32 i = 0; i < total; i++)
@@ -90,7 +90,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
             c[i][j] = 0;
             for (I32 k = 0; k < n; k++)
             {
-                c[i][j] += a[i][k] * b[k][j];
+                c[i][j] += a[i + beginMatrix][k] * b[k][j];
             }
         }
     }
