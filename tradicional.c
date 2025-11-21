@@ -37,9 +37,8 @@ void print(MATRIX a, I32 n)
     }
 }
 
-MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 endMatrix)
+MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 beginMatrix, UI32 total)
 {
-    UI32 total = endMatrix - beginMatrix;
     MATRIX result = (MATRIX)malloc(sizeof(I32 *) * total);
     for (I32 i = 0; i < total; i++)
     {
@@ -99,6 +98,7 @@ int main(int argc, char **argv)
     I32 endMatrix = beginMatrix + work;
     if (loseWork - processId > 0)
         endMatrix += 1;
+    UI32 total = endMatrix - beginMatrix;
     struct timespec start, end;
     if (processId == 0)
     {
@@ -123,21 +123,16 @@ int main(int argc, char **argv)
     }
     broadcastMatrix(a, n);
     broadcastMatrix(b, n);
-    MATRIX c = multCuadratica(a, b, n, beginMatrix, endMatrix);
+    MATRIX c = multCuadratica(a, b, n, beginMatrix, total);
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
     {
         MATRIX response = (MATRIX)malloc(sizeof(I32 *) * n);
-        // UI32 total0 = endMatrix - beginMatrix;
         // printf("process %i of %i\n", processId, size_Of_Cluster);
-        // for (UI32 i = 0; i < total0; i++)
+        // for (UI32 i = 0; i < total; i++)
         // {
         //     response[i] = (I32 *)malloc(sizeof(I32) * n);
         //     memcpy(response[i], c[i], sizeof(I32) * n);
-        //     for(UI32 j = 0; j < n; j++){
-        //         printf("%i ", response[i][j]);
-        //     }
-        //     printf("\n");
         // }
         for (int pid = 1; pid < size_Of_Cluster; pid++)
         {
@@ -146,13 +141,12 @@ int main(int argc, char **argv)
             if (loseWork - pid > 0)
                 pEnd += 1;
             UI32 pTotal = pEnd - pBegin;
-            printf("%i\n", pTotal);
             if (pTotal <= 0)
                 continue;
-            for (UI32 i = 0; i < pTotal; i++)
+            for (UI32 i = total; i < total + pTotal; i++)
             {
-                response[pBegin + i] = (I32 *)malloc(sizeof(I32) * n);
-                // MPI_Recv(response[pBegin + i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                response[i] = (I32 *)malloc(sizeof(I32) * n);
+                MPI_Recv(response[i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
         }
         // clock_gettime(CLOCK_MONOTONIC, &end);
@@ -162,10 +156,9 @@ int main(int argc, char **argv)
     }
     else
     {
-        UI32 total = endMatrix - beginMatrix;
         for (UI32 i = 0; i < total; i++)
         {
-            // MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
+            MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
             // printf("process %i of %i\n", processId, size_Of_Cluster);
             for(UI32 j = 0; j < n; j++){
                 printf("%i ", c[i][j]);
