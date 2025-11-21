@@ -95,6 +95,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
     {
+        printf("1\n");
         for (int pid = 1; pid < size_Of_Cluster; pid++)
         {
             I32 pBegin = work * pid + min(pid, loseWork);
@@ -106,12 +107,12 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
                 continue;
             for (UI32 i = total; i < total + pTotal; i++)
             {
+                printf("%i\n", i);
                 c[i] = (I32 *)malloc(sizeof(I32) * n);
                 MPI_Recv(c[i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
             total += pTotal;
         }
-        printf("pepe el mago\n");
         printf("pepe el mago\n");
         return c;
     }
