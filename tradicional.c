@@ -169,10 +169,10 @@ int main(int argc, char **argv)
         a = randomMatrix(n);
         b = randomMatrix(n);
         clock_gettime(CLOCK_MONOTONIC, &start);
-        printf("matrix a\n");
-        print(a, n);
-        printf("matrix b\n");
-        print(b, n);
+        // printf("matrix a\n");
+        // print(a, n);
+        // printf("matrix b\n");
+        // print(b, n);
     }
     else
     {
@@ -187,7 +187,9 @@ int main(int argc, char **argv)
     broadcastMatrix(a, n);
     broadcastMatrix(b, n);
     MATRIX c = multCuadratica(a, b, n, processId, size_Of_Cluster);
-    print(c, n);
+    // print(c, n);
+    double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("%.6f", elapsed);
     clock_gettime(CLOCK_MONOTONIC, &end);
     freeMatrix(a, n);
     freeMatrix(b, n);
