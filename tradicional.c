@@ -81,7 +81,11 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
     UI32 total = endMatrix - beginMatrix;
     printf("2\n");
     MATRIX c = (MATRIX)malloc(sizeof(I32 *) * n);
-    printf("2.1, begin = %i\n", beginMatrix);
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (processId == 0)
+    {
+        printf("2.1, begin = %i\n", beginMatrix);
     for (I32 i = 0; i < total; i++)
     {
         c[i] = (I32 *)malloc(sizeof(I32) * n);
@@ -94,9 +98,6 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
             }
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (processId == 0)
-    {
         printf("3\n");
         for (int pid = 1; pid < size_Of_Cluster; pid++)
         {
