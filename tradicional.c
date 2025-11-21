@@ -79,9 +79,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, I32 processId, UI32 size_Of_Cl
     if (loseWork - processId > 0)
         endMatrix += 1;
     UI32 total = endMatrix - beginMatrix;
-    printf("2\n");
     MATRIX c = (MATRIX)malloc(sizeof(I32 *) * n);
-    printf("id = %i, begin = %i, end = %i, total = %i, work = %i, lose = %i\n",processId, beginMatrix, endMatrix, total, work, loseWork);
     for (I32 i = 0; i < total; i++)
     {
         c[i] = (I32 *)malloc(sizeof(I32) * n);
@@ -97,7 +95,6 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, I32 processId, UI32 size_Of_Cl
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
     {
-        printf("3\n");
         for (int pid = 1; pid < size_Of_Cluster; pid++)
         {
             I32 pBegin = work * pid + min(pid, loseWork);
@@ -109,13 +106,11 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, I32 processId, UI32 size_Of_Cl
                 continue;
             for (UI32 i = total; i < total + pTotal; i++)
             {
-                printf("%i\n", i);
                 c[i] = (I32 *)malloc(sizeof(I32) * n);
                 MPI_Recv(c[i], n, MPI_INT, pid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
             total += pTotal;
         }
-        printf("pepe el mago\n");
         return c;
     }
     for (UI32 i = 0; i < total; i++)
@@ -166,7 +161,6 @@ int main(int argc, char **argv)
     if (processId == 0)
     {
         clock_gettime(CLOCK_MONOTONIC, &start);
-        printf("1\n");
         srand(time(NULL));
         a = randomMatrix(n);
         b = randomMatrix(n);
@@ -187,7 +181,6 @@ int main(int argc, char **argv)
     }
     broadcastMatrix(a, n);
     broadcastMatrix(b, n);
-    printf("1.5\n");
     MATRIX c = multCuadratica(a, b, n, processId, size_Of_Cluster);
     // print(c, n);
     double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
