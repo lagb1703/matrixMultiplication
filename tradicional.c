@@ -18,9 +18,31 @@ void freeMatrix(MATRIX a, I32 n)
 {
     if (!a)
         return;
-    for (I32 i = 0; i < n; i++)
-    {
-        free(a[i]);
+    if (n <= 0) {
+        free(a);
+        return;
+    }
+    I32 *first = a[0];
+    if (!first) {
+        for (I32 i = 0; i < n; i++) {
+            if (a[i]) free(a[i]);
+        }
+        free(a);
+        return;
+    }
+    int is_contiguous = 1;
+    for (I32 i = 0; i < n; i++) {
+        if (a[i] != first + (I32)((I32)i * (I32)n)) {
+            is_contiguous = 0;
+            break;
+        }
+    }
+    if (is_contiguous) {
+        free(first);
+    } else {
+        for (I32 i = 0; i < n; i++) {
+            if (a[i]) free(a[i]);
+        }
     }
     free(a);
 }
