@@ -157,7 +157,7 @@ int main(int argc, char **argv)
         // clock_gettime(CLOCK_MONOTONIC, &end);
         // printf("result: \n");
         // print(response, n);
-        free(response);
+        // free(response);
     }
     else
     {
