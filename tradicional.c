@@ -87,7 +87,7 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
         c[i] = (I32 *)malloc(sizeof(I32) * n);
         for (I32 j = 0; j < n; j++)
         {
-        //     c[i][j] = 0;
+            c[i][j] = 0;
         //     for (I32 k = 0; k < n; k++)
         //     {
         //         c[i][j] += a[i + beginMatrix][k] * b[k][j];
@@ -189,7 +189,6 @@ int main(int argc, char **argv)
     broadcastMatrix(b, n);
     printf("1.5\n");
     MATRIX c = multCuadratica(a, b, n, processId, size_Of_Cluster);
-    printf("pepe el mago\n");
     // print(c, n);
     double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
     printf("%.6f", elapsed);
