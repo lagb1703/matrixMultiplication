@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
     {
-        // MATRIX response = (MATRIX)malloc(sizeof(I32 *) * n);
+        MATRIX response = (MATRIX)malloc(sizeof(I32 *) * n);
         // UI32 total0 = endMatrix - beginMatrix;
         // printf("process %i of %i\n", processId, size_Of_Cluster);
         // for (UI32 i = 0; i < total0; i++)
