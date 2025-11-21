@@ -165,7 +165,6 @@ int main(int argc, char **argv)
     struct timespec start, end;
     if (processId == 0)
     {
-        clock_gettime(CLOCK_MONOTONIC, &start);
         srand(time(NULL));
         a = randomMatrix(n);
         b = randomMatrix(n);
@@ -186,6 +185,7 @@ int main(int argc, char **argv)
     }
     broadcastMatrix(a, n);
     broadcastMatrix(b, n);
+    clock_gettime(CLOCK_MONOTONIC, &start);
     MATRIX c = multCuadratica(a, b, n, processId, size_Of_Cluster);
     // print(c, n);
     double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
