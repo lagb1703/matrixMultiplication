@@ -72,15 +72,15 @@ void print(MATRIX a, I32 n)
 
 MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_Cluster)
 {
-    if (processId == 0)
-    {
     I32 work = n / size_Of_Cluster;
     I32 loseWork = n % size_Of_Cluster;
     I32 beginMatrix = work * processId + min(processId, loseWork);
     I32 endMatrix = beginMatrix + work;
     if (loseWork - processId > 0)
-    endMatrix += 1;
+        endMatrix += 1;
     UI32 total = endMatrix - beginMatrix;
+    if (processId == 0)
+    {
     printf("2\n");
     MATRIX c = (MATRIX)malloc(sizeof(I32 *) * n);
     printf("2.1\n");
@@ -118,11 +118,11 @@ MATRIX multCuadratica(MATRIX a, MATRIX b, UI32 n, UI32 processId, UI32 size_Of_C
         printf("pepe el mago\n");
         return c;
     }
-    for (UI32 i = 0; i < total; i++)
-    {
-        MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
-    }
-    return c;
+    // for (UI32 i = 0; i < total; i++)
+    // {
+    //     MPI_Send(c[i], n, MPI_INT, 0, 1, MPI_COMM_WORLD);
+    // }
+    // return c;
 }
 
 MATRIX randomMatrix(UI32 n)
